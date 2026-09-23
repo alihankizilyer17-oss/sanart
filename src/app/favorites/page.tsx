@@ -11,6 +11,7 @@ import {
   deleteDoc,
   doc,
 } from "firebase/firestore";
+import { onAuthStateChanged, User } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 
 type FavoriteItem = {
@@ -24,29 +25,41 @@ type FavoriteItem = {
 
 export default function FavoritesPage() {
   const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadFavorites = async () => {
-      const user = auth.currentUser;
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      setUser(currentUser);
 
-      if (!user) return;
+      if (!currentUser) {
+        setFavorites([]);
+        setLoading(false);
+        return;
+      }
 
-      const q = query(
-        collection(db, "favorites"),
-        where("userId", "==", user.uid)
-      );
+      try {
+        const q = query(
+          collection(db, "favorites"),
+          where("userId", "==", currentUser.uid)
+        );
 
-      const snapshot = await getDocs(q);
+        const snapshot = await getDocs(q);
 
-      const data = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as FavoriteItem[];
+        const data = snapshot.docs.map((favoriteDoc) => ({
+          id: favoriteDoc.id,
+          ...favoriteDoc.data(),
+        })) as FavoriteItem[];
 
-      setFavorites(data);
-    };
+        setFavorites(data);
+      } catch (error) {
+        console.error("Favoriler alınamadı:", error);
+      } finally {
+        setLoading(false);
+      }
+    });
 
-    loadFavorites();
+    return () => unsubscribe();
   }, []);
 
   const removeFavorite = async (id: string) => {
@@ -57,31 +70,95 @@ export default function FavoritesPage() {
         prev.filter((item) => item.id !== id)
       );
     } catch (error) {
-      console.error(error);
+      console.error("Favori silinemedi:", error);
       alert("Favori silinemedi.");
     }
   };
 
+  if (loading) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-black text-white">
+        <p className="text-zinc-400">Favorileriniz yükleniyor...</p>
+      </main>
+    );
+  }
+
+  if (!user) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-black px-4 text-white">
+        <div className="w-full max-w-md rounded-3xl bg-zinc-900 p-10 text-center shadow-2xl">
+          <div className="text-5xl">❤️</div>
+
+          <h1 className="mt-5 text-3xl font-bold">
+            Favorilerim
+          </h1>
+
+          <p className="mt-3 text-zinc-400">
+            Favorilerinizi görmek için hesabınıza giriş yapmalısınız.
+          </p>
+
+          <Link
+            href="/login"
+            className="mt-8 block w-full rounded-xl bg-white py-3 font-semibold text-black transition hover:bg-zinc-200"
+          >
+            Giriş Yap
+          </Link>
+
+          <Link
+            href="/register"
+            className="mt-4 block w-full rounded-xl border border-zinc-600 py-3 font-semibold text-white transition hover:border-white hover:bg-zinc-800"
+          >
+            Kayıt Ol
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
   return (
-    <main className="min-h-screen bg-black p-10 text-white">
+    <main className="min-h-screen bg-black px-4 py-10 text-white sm:px-6 lg:px-10">
       <div className="mx-auto max-w-6xl">
-        <h1 className="mb-10 text-5xl font-bold">
-          ❤️ Favorilerim
-        </h1>
+
+        <div className="mb-10">
+          <h1 className="text-4xl font-bold sm:text-5xl">
+            ❤️ Favorilerim
+          </h1>
+
+          <p className="mt-3 text-zinc-400">
+            Beğendiğiniz tabloları burada bulabilirsiniz.
+          </p>
+        </div>
 
         {favorites.length === 0 ? (
-          <p className="text-zinc-400">
-            Henüz favorilere eklediğiniz bir tablo yok.
-          </p>
+          <div className="rounded-3xl border border-zinc-800 bg-zinc-900 p-10 text-center">
+            <div className="text-5xl">🤍</div>
+
+            <h2 className="mt-5 text-2xl font-bold">
+              Henüz favoriniz yok
+            </h2>
+
+            <p className="mt-3 text-zinc-400">
+              Beğendiğiniz tabloları favorilerinize ekleyerek
+              daha sonra kolayca bulabilirsiniz.
+            </p>
+
+            <Link
+              href="/paintings"
+              className="mt-7 inline-block rounded-xl bg-white px-6 py-3 font-semibold text-black transition hover:bg-zinc-200"
+            >
+              Tabloları Keşfet
+            </Link>
+          </div>
         ) : (
-          <div className="grid grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {favorites.map((item) => (
               <div
                 key={item.id}
-                className="relative overflow-hidden rounded-2xl bg-zinc-900 transition hover:-translate-y-2 hover:shadow-2xl"
+                className="group relative overflow-hidden rounded-2xl bg-zinc-900 transition duration-300 hover:-translate-y-2 hover:shadow-2xl"
               >
                 <button
                   onClick={() => removeFavorite(item.id)}
+                  aria-label={`${item.title} favorilerden kaldır`}
                   className="absolute right-3 top-3 z-20 rounded-full bg-black/70 p-2 text-xl transition hover:bg-red-600"
                 >
                   ❤️
@@ -93,7 +170,7 @@ export default function FavoritesPage() {
                     alt={item.title}
                     width={400}
                     height={400}
-                    className="h-72 w-full object-cover"
+                    className="h-72 w-full object-cover transition duration-500 group-hover:scale-105"
                   />
 
                   <div className="p-5">
