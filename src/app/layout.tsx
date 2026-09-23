@@ -25,6 +25,9 @@ export const metadata: Metadata = {
     "online sanat",
     "art marketplace",
   ],
+  verification: {
+    google: "9FxLDJNfNro2Hm9Zhrw42eU_NkiN9MkDLt4ab-0tZKk",
+  },
 };
 
 export default function RootLayout({
