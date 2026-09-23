@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { collection, addDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, auth } from "@/lib/firebase";
 
 export default function UploadPage() {
   const [title, setTitle] = useState("");
@@ -12,15 +12,22 @@ export default function UploadPage() {
   const [description, setDescription] = useState("");
   const handleSave = async () => {
   try {
-    await addDoc(collection(db, "products"), {
-      title,
-      artist,
-      price: Number(price),
-      category,
-      description,
-      image: "/categories/portre.jpg", // Şimdilik sabit resim
-      createdAt: new Date(),
-    });
+if (!auth.currentUser) {
+  alert("Ürün eklemek için giriş yapmalısınız.");
+  return;
+}
+
+await addDoc(collection(db, "products"), {
+  title,
+  artist,
+  price: Number(price),
+  category,
+  description,
+  image: "/categories/portre.jpg",
+  sellerId: auth.currentUser.uid,
+  sellerEmail: auth.currentUser.email,
+  createdAt: new Date(),
+});
 
     alert("Tablo başarıyla eklendi!");
 
