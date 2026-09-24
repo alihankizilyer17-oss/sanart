@@ -10,12 +10,26 @@ export default function UploadPage() {
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
+  const [image, setImage] = useState("/categories/portre.jpg");
+  const [saving, setSaving] = useState(false);
   const handleSave = async () => {
   try {
+    setSaving(true);
 if (!auth.currentUser) {
   alert("Ürün eklemek için giriş yapmalısınız.");
   return;
 }
+
+if (!title || !artist || !price || !category || !description) {
+  alert("Lütfen tüm alanları doldurun.");
+  return;
+}
+
+if (Number(price) <= 0) {
+  alert("Fiyat 0'dan büyük olmalıdır.");
+  return;
+}
+
 
 await addDoc(collection(db, "products"), {
   title,
@@ -23,7 +37,7 @@ await addDoc(collection(db, "products"), {
   price: Number(price),
   category,
   description,
-  image: "/categories/portre.jpg",
+  image,
   sellerId: auth.currentUser.uid,
   sellerEmail: auth.currentUser.email,
   createdAt: new Date(),
@@ -39,7 +53,9 @@ await addDoc(collection(db, "products"), {
   } catch (error) {
     console.error(error);
     alert("Bir hata oluştu.");
-  }
+  } finally {
+  setSaving(false);
+}
 };
 
   return (
@@ -89,11 +105,12 @@ await addDoc(collection(db, "products"), {
           className="mb-6 h-40 w-full rounded-xl bg-zinc-800 p-4 text-white outline-none"
         />
 
-        <button
+       <button
   onClick={handleSave}
-  className="w-full rounded-xl bg-white py-3 font-bold text-black hover:bg-zinc-200"
+  disabled={saving}
+  className="w-full rounded-xl bg-white py-3 font-bold text-black transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-50"
 >
-  Tabloyu Kaydet
+  {saving ? "Kaydediliyor..." : "Tabloyu Kaydet"}
 </button>
 
       </div>

@@ -102,13 +102,13 @@ export default function ProductPage() {
 
   return (
     <main className="min-h-screen bg-black p-10 text-white">
-      <div className="mx-auto grid max-w-6xl grid-cols-2 gap-12">
+     <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-4 sm:px-6 lg:grid-cols-2 lg:gap-12">
         <Image
           src={product.image}
           alt={product.title}
           width={600}
           height={700}
-          className="rounded-3xl object-cover"
+         className="h-auto w-full rounded-3xl object-contain"
         />
 
         <div>

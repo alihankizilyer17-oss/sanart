@@ -14,19 +14,51 @@ import {
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
 
 export default function Header() {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+const [isArtist, setIsArtist] = useState(false);
+
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+  const unsubscribe = onAuthStateChanged(
+    auth,
+    async (currentUser) => {
       setUser(currentUser);
-    });
 
-    return () => unsubscribe();
-  }, []);
+      if (!currentUser) {
+        setIsArtist(false);
+        return;
+      }
+
+      try {
+        const userDoc = await getDoc(
+          doc(db, "users", currentUser.uid)
+        );
+
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+
+          setIsArtist(userData.role === "artist");
+        } else {
+          setIsArtist(false);
+        }
+      } catch (error) {
+        console.error(
+          "Kullanıcı bilgileri alınamadı:",
+          error
+        );
+
+        setIsArtist(false);
+      }
+    }
+  );
+
+  return () => unsubscribe();
+}, []);
 
   return (
     <header className="w-full bg-black text-white shadow-lg">
@@ -97,6 +129,16 @@ export default function Header() {
           >
             Hakkımızda
           </a>
+
+
+          {isArtist && (
+  <Link
+    href="/seller"
+    className="font-semibold text-amber-400 transition hover:text-amber-300"
+  >
+    🎨 Sanatçı Paneli
+  </Link>
+)}
         </nav>
 
         {/* İkonlar */}
@@ -261,7 +303,15 @@ export default function Header() {
               >
                 Hakkımızda
               </a>
-
+{isArtist && (
+  <Link
+    href="/seller"
+    onClick={() => setMobileMenuOpen(false)}
+    className="border-b border-zinc-800 py-3.5 font-semibold text-amber-400 transition hover:text-amber-300"
+  >
+    🎨 Sanatçı Paneli
+  </Link>
+)}
               <Link
                 href="/orders"
                 onClick={() => setMobileMenuOpen(false)}

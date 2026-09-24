@@ -3,15 +3,18 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { onAuthStateChanged, User } from "firebase/auth";
+import { useRouter } from "next/navigation";
 import { auth, db } from "@/lib/firebase";
 import {
   collection,
   getDocs,
   query,
   where,
+  doc,
+  getDoc,
 } from "firebase/firestore";
-
 export default function SellerPage() {
+  const router = useRouter();
     const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 const [products, setProducts] = useState<any[]>([]);
@@ -24,7 +27,28 @@ const [products, setProducts] = useState<any[]>([]);
       setLoading(false);
       return;
     }
+const userDoc = await getDoc(
+  doc(db, "users", currentUser.uid)
+);
 
+if (!userDoc.exists()) {
+  setProducts([]);
+  setLoading(false);
+  return;
+}
+
+const userData = userDoc.data();
+if (userData.role !== "artist") {
+  setProducts([]);
+  setLoading(false);
+
+  alert(
+    "Bu alan sadece onaylanmış sanatçı hesaplarına açıktır."
+  );
+
+  router.push("/");
+  return;
+}
     try {
       const productsQuery = query(
         collection(db, "products"),
@@ -70,22 +94,23 @@ const [products, setProducts] = useState<any[]>([]);
           </h1>
 
           <p className="mt-4 text-zinc-400">
-            Satıcı panelini kullanmak için giriş yapmalısınız.
-          </p>
+  Sanatçı paneline erişmek için sanatçı hesabınızla
+  giriş yapmalısınız.
+</p>
 
           <Link
-            href="/login"
-            className="mt-8 block rounded-xl bg-white py-3 font-semibold text-black hover:bg-zinc-200"
-          >
-            Giriş Yap
-          </Link>
+  href="/artist/login"
+  className="mt-8 block rounded-xl bg-white py-3 font-semibold text-black transition hover:bg-zinc-200"
+>
+  🎨 Sanatçı Girişi
+</Link>
 
           <Link
-            href="/register"
-            className="mt-4 block rounded-xl border border-zinc-700 py-3 font-semibold text-white hover:bg-zinc-800"
-          >
-            Kayıt Ol
-          </Link>
+  href="/artist/apply"
+  className="mt-4 block rounded-xl border border-zinc-700 py-3 font-semibold text-white transition hover:bg-zinc-800"
+>
+  🎨 Sanatçı Ol
+</Link>
         </div>
       </main>
     );
