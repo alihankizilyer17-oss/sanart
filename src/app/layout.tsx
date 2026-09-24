@@ -16,7 +16,13 @@ export const metadata: Metadata = {
   title: "SanArt | Original Art Marketplace",
   description:
     "SanArt, özgün tabloları ve sanat eserlerini keşfedebileceğiniz online sanat marketplace platformudur.",
-  keywords: [
+ icons: {
+  icon: "/logo.png",
+  shortcut: "/logo.png",
+  apple: "/logo.png",
+},
+ 
+    keywords: [
     "SanArt",
     "sanat",
     "tablolar",
