@@ -4,6 +4,7 @@ import FeaturedProducts from "../components/FeaturedProducts";
 import Categories from "../components/Categories";
 import Hero from "../components/Hero";
 import Header from "../components/Header";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -22,10 +23,12 @@ export default function Home() {
             Binlerce sanatçının eşsiz eserlerini keşfet.
           </p>
 
-          <button className="rounded-xl bg-orange-500 px-8 py-4 text-xl hover:bg-orange-600">
-            Şimdi Keşfet
-          </button>
-
+          <Link
+  href="/paintings"
+  className="inline-block rounded-xl bg-orange-500 px-8 py-4 text-xl hover:bg-orange-600"
+>
+  Şimdi Keşfet
+</Link>
           <FeaturedProducts />
         </div>
       </section>
