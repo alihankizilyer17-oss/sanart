@@ -16,12 +16,24 @@ import { useEffect, useState } from "react";
 import { onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
+import { useRouter } from "next/navigation";
 
 export default function Header() {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 const [isArtist, setIsArtist] = useState(false);
+const router = useRouter();
 
+const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+
+  const term = searchTerm.trim();
+
+  if (!term) return;
+
+  router.push(`/paintings?search=${encodeURIComponent(term)}`);
+};
 
   useEffect(() => {
   const unsubscribe = onAuthStateChanged(
@@ -87,18 +99,20 @@ const [isArtist, setIsArtist] = useState(false);
         </Link>
 
         {/* Arama */}
-        <div className="relative w-64 shrink-0">
-          <Search
-            size={20}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500"
-          />
+        <form onSubmit={handleSearch} className="relative w-64 shrink-0">
+  <Search
+    size={20}
+    className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500"
+  />
 
-          <input
-            type="text"
-            placeholder="Tablo Ara..."
-            className="w-full rounded-xl border border-zinc-700 bg-zinc-900 py-3 pl-10 pr-4 text-white outline-none transition focus:border-white"
-          />
-        </div>
+  <input
+    type="search"
+    placeholder="Tablo Ara..."
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    className="w-full rounded-xl border border-zinc-700 bg-zinc-900 py-3 pl-10 pr-4 text-white outline-none transition focus:border-white"
+  />
+</form>
 
         {/* Menü */}
         <nav className="flex shrink-0 items-center gap-6 whitespace-nowrap">
@@ -250,20 +264,20 @@ const [isArtist, setIsArtist] = useState(false);
 
         {/* Mobil arama */}
         <div className="px-4 pb-3">
-          <div className="relative w-full">
+         <form onSubmit={handleSearch} className="relative w-full">
+  <Search
+    size={18}
+    className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500"
+  />
 
-            <Search
-              size={18}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500"
-            />
-
-            <input
-              type="text"
-              placeholder="Tablo Ara..."
-              className="w-full rounded-xl border border-zinc-700 bg-zinc-900 py-2.5 pl-10 pr-4 text-sm text-white outline-none transition focus:border-white"
-            />
-
-          </div>
+  <input
+    type="search"
+    placeholder="Tablo Ara..."
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    className="w-full rounded-xl border border-zinc-700 bg-zinc-900 py-2.5 pl-10 pr-4 text-sm text-white outline-none transition focus:border-white"
+  />
+</form>
         </div>
 
         {/* Mobil menü */}
